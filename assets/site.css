@@ -356,3 +356,20 @@ body[data-page='home'] .nav .wrap { width: 100%; padding: 0 24px; }
 .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .formdone { font-weight: 600; margin-bottom: 8px; }
 .formdone:empty { display: none; }
+
+/* 벡터 지도 */
+.maplibregl-map { font-family: 'IBM Plex Sans KR', 'Malgun Gothic', sans-serif; }
+.maplibregl-ctrl-group { border-radius: 10px !important; box-shadow: 0 2px 10px rgba(46, 36, 34, .16) !important; }
+.pricepin { width: auto !important; height: auto !important; padding: 0 0 8px; background: none; border: 0; cursor: pointer; font-family: inherit; }
+.pricepin span { position: relative; left: auto; bottom: auto; display: block; transform: none; white-space: nowrap; }
+.pricepin.is-left span { transform: translateX(calc(-50% + 16px)); }
+.pricepin.is-right span { transform: translateX(calc(50% - 16px)); }
+.pricepin.is-left span::after { left: auto; right: 10px; }
+.pricepin.is-right span::after { left: 16px; }
+.pricepin.is-hover span { transform: scale(1.06); }
+.pricepin.is-left.is-hover span { transform: translateX(calc(-50% + 16px)) scale(1.06); }
+.pricepin.is-right.is-hover span { transform: translateX(calc(50% - 16px)) scale(1.06); }
+.pricepin:hover, .pricepin.is-hover, .pricepin.is-active { z-index: 2; }
+@media (max-width: 719px) {
+  .maphidden { bottom: 36px; }
+}

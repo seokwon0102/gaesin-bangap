@@ -41,9 +41,46 @@ function satelliteTile([lat, lon], zoom = 18) {
   return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${y}/${x}`;
 }
 
-function createMap(box, { center, zoom, mode }) {
-  if (!window.L) {
-    box.innerHTML = '<p class="mapfail">지도를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.</p>';
+const lngLat = ([lat, lon]) => [lon, lat];
+
+// 벡터 지도의 색과 글자를 사이트에 맞게 다시 칠한다.
+function restyleMap(style) {
+  const line = '#d3cec3';
+  const colors = [
+    [/^background$/, { 'background-color': '#f1efe8' }],
+    [/^landuse-(residential|suburb|commercial|industrial|railway|cemetery)/, { 'fill-opacity': 0 }],
+    [/^landuse-(school|hospital)/, { 'fill-color': '#f4eee2', 'fill-opacity': 1 }],
+    [/^(park|landcover-wood|landcover-grass)/, { 'fill-color': '#d4ecc9', 'fill-opacity': 1 }],
+    [/^water(-intermittent)?$/, { 'fill-color': '#a9dcf5' }],
+    [/^waterway/, { 'line-color': '#a9dcf5' }],
+    [/^building$/, { 'fill-color': '#eceae4', 'fill-outline-color': line }],
+    [/motorway.*casing|trunk.*casing/, { 'line-color': '#e2b56b' }],
+    [/casing/, { 'line-color': line }],
+    [/-(motorway|motorway-link)$/, { 'line-color': '#fbc87c' }],
+    [/-(trunk|trunk-primary|primary)$/, { 'line-color': '#ffe29f' }],
+    [/-secondary-tertiary$/, { 'line-color': '#fff1bd' }],
+    [/-(minor|link|service-track)$/, { 'line-color': '#ffffff' }],
+    [/-path/, { 'line-color': '#e6e2da' }],
+  ];
+  style.layers = style.layers.filter((layer) => !/^(building-top|road_shield|highway-shield|road_oneway|boundary)/.test(layer.id) && layer.type !== 'hillshade');
+  for (const layer of style.layers) {
+    const match = colors.find(([pattern, paint]) => pattern.test(layer.id) && Object.keys(paint)[0].startsWith(layer.type));
+    if (match) {
+      layer.paint = { ...layer.paint, ...match[1] };
+      delete layer.paint['fill-pattern'];
+    }
+    if (layer.type === 'symbol' && layer.layout?.['text-field']) {
+      layer.layout['text-field'] = ['coalesce', ['get', 'name:ko'], ['get', 'name'], ['get', 'name_en']];
+      layer.paint = { ...layer.paint, 'text-color': '#4b4744', 'text-halo-color': '#ffffff', 'text-halo-width': 1.6 };
+    }
+  }
+  return style;
+}
+
+function createMap(box, { center, zoom, mode, scroll }) {
+  const fail = () => { box.innerHTML = '<p class="mapfail">지도를 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.</p>'; };
+  if (!window.maplibregl) {
+    fail();
     return null;
   }
   box.innerHTML = `<div class="mapcanvas"></div>
@@ -51,25 +88,44 @@ function createMap(box, { center, zoom, mode }) {
       <button type="button" data-layer="road">지도</button>
       <button type="button" data-layer="satellite">위성</button>
     </div>`;
-  const map = L.map(box.querySelector('.mapcanvas'), { scrollWheelZoom: false }).setView(center, zoom);
-  const layers = {
-    road: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19, className: 'tiles-soft', attribution: '&copy; OpenStreetMap contributors',
-    }),
-    satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
-    }),
-  };
-  function show(name) {
-    Object.values(layers).forEach((layer) => layer.remove());
-    layers[name].addTo(map);
-    box.querySelectorAll('[data-layer]').forEach((el) => el.setAttribute('aria-pressed', String(el.dataset.layer === name)));
+  let map;
+  try {
+    map = new maplibregl.Map({
+      container: box.querySelector('.mapcanvas'),
+      style: { version: 8, sources: {}, layers: [] },
+      center: lngLat(center), zoom, minZoom: 10, maxZoom: 18.5,
+      dragRotate: false, pitchWithRotate: false, touchPitch: false, scrollZoom: Boolean(scroll),
+      localIdeographFontFamily: "'IBM Plex Sans KR', 'Malgun Gothic', sans-serif",
+    });
+  } catch {
+    fail();
+    return null;
   }
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+  map.setStyle('https://tiles.openfreemap.org/styles/bright', { transformStyle: (_, next) => restyleMap(next) });
+  let current = mode;
+  function apply() {
+    if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', current === 'satellite' ? 'visible' : 'none');
+    box.querySelectorAll('[data-layer]').forEach((el) => el.setAttribute('aria-pressed', String(el.dataset.layer === current)));
+  }
+  map.once('style.load', () => {
+    map.addSource('satellite', {
+      type: 'raster', tileSize: 256, maxzoom: 19,
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+      attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
+    });
+    const firstLabel = map.getStyle().layers.find((layer) => layer.type === 'symbol')?.id;
+    map.addLayer({ id: 'satellite', type: 'raster', source: 'satellite' }, firstLabel);
+    apply();
+  });
   box.querySelector('.mapseg').addEventListener('click', (e) => {
     const button = e.target.closest('[data-layer]');
-    if (button) show(button.dataset.layer);
+    if (!button) return;
+    current = button.dataset.layer;
+    apply();
   });
-  show(mode);
+  apply();
   return map;
 }
 
@@ -141,13 +197,14 @@ function renderExplorer() {
   $('#dealTabs').innerHTML = tabButtons('deal', DEAL_TABS, state.deal);
   $('#sort').innerHTML = SORT.map(([v, label]) => `<option value="${v}">${label}</option>`).join('');
 
-  const map = createMap($('#map'), { center: DONG_CENTER, zoom: 15, mode: 'road' });
+  const map = createMap($('#map'), { center: DONG_CENTER, zoom: 14, mode: 'road', scroll: true });
   $('#map').insertAdjacentHTML('beforeend', '<p class="maphidden" id="mapHidden" aria-live="polite"></p>');
-  const markers = window.L ? L.layerGroup().addTo(map) : null;
   const points = Object.values(COORDS);
   if (map && points.length) {
-    const wide = map.getSize().x >= 720;
-    map.fitBounds(wide ? [...points, DONG_CENTER] : points, { padding: wide ? [72, 72] : [88, 64], maxZoom: 16 });
+    const wide = map.getContainer().clientWidth >= 720;
+    const bounds = new maplibregl.LngLatBounds();
+    (wide ? [...points, DONG_CENTER] : points).forEach((point) => bounds.extend(lngLat(point)));
+    map.fitBounds(bounds, { duration: 0, maxZoom: 15, padding: wide ? 96 : { top: 96, bottom: 64, left: 72, right: 72 } });
   }
 
   const pins = {};
@@ -167,9 +224,11 @@ function renderExplorer() {
   }
 
   function drawMap(list) {
-    if (!markers) return;
-    markers.clearLayers();
-    Object.keys(pins).forEach((key) => delete pins[key]);
+    if (!map) return;
+    Object.keys(pins).forEach((key) => {
+      pins[key].remove();
+      delete pins[key];
+    });
     const buildings = {};
     let hidden = 0;
     for (const r of list) {
@@ -178,19 +237,20 @@ function renderExplorer() {
     }
     $('#mapHidden').textContent = hidden ? `지도에 없는 계약 ${num(hidden)}건, 지번 비공개` : '';
     for (const [jibun, rows] of Object.entries(buildings)) {
-      const active = jibun === state.building ? ' is-active' : '';
-      pins[jibun] = L.marker(COORDS[jibun], {
-        title: `개신동 ${jibun}`,
-        riseOnHover: true,
-        icon: L.divIcon({ className: `pricepin${active}${sideOf(jibun, Object.keys(buildings))}`, html: pinHtml(rows), iconSize: null }),
-      }).on('click', () => selectBuilding(jibun)).addTo(markers);
+      const pin = document.createElement('button');
+      pin.type = 'button';
+      pin.title = `개신동 ${jibun}`;
+      pin.className = `pricepin${jibun === state.building ? ' is-active' : ''}${sideOf(jibun, Object.keys(buildings))}`;
+      pin.innerHTML = pinHtml(rows);
+      pin.addEventListener('click', () => selectBuilding(jibun));
+      pins[jibun] = new maplibregl.Marker({ element: pin, anchor: 'bottom' }).setLngLat(lngLat(COORDS[jibun])).addTo(map);
     }
   }
 
   function selectBuilding(jibun) {
     state.building = jibun;
     draw();
-    if (jibun) map.flyTo(COORDS[jibun], 17, { duration: .5 });
+    if (jibun) map.flyTo({ center: lngLat(COORDS[jibun]), zoom: 16, duration: 500 });
     $('.listpane').scrollTo({ top: $('#result').offsetTop - 16 });
   }
 
@@ -282,9 +342,12 @@ function renderDetail() {
     <p class="notice">지금 나와 있는 매물이 아니라 이미 맺어진 계약 기록입니다. 관리비와 집 상태는 자료에 없습니다.</p>
     ${siblings.length ? `<h2>같은 건물의 다른 계약</h2><div class="lcards">${siblings.map(listCard).join('')}</div>` : ''}
     <div class="btn-row detailaction"><a class="btn btn--primary" href="review.html#write">후기 남기기</a><a class="btn btn--secondary" href="review.html">거주 후기 읽기</a></div>`;
-  const map = createMap($('#detailMap'), { center: coord ?? DONG_CENTER, zoom: coord ? 18 : 16, mode: 'satellite' });
+  const map = createMap($('#detailMap'), { center: coord ?? DONG_CENTER, zoom: coord ? 17 : 15, mode: 'satellite' });
   if (map && coord) {
-    L.marker(coord, { icon: L.divIcon({ className: 'pricepin is-active', html: `<span>${esc(shortPrice(r))}</span>`, iconSize: null }) }).addTo(map);
+    const pin = document.createElement('div');
+    pin.className = 'pricepin is-active';
+    pin.innerHTML = `<span>${esc(shortPrice(r))}</span>`;
+    new maplibregl.Marker({ element: pin, anchor: 'bottom' }).setLngLat(lngLat(coord)).addTo(map);
   }
 }
 
