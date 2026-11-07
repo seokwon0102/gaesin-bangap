@@ -103,22 +103,28 @@ function createMap(box, { center, zoom, mode, scroll }) {
   }
   map.touchZoomRotate.disableRotation();
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
-  map.setStyle('https://tiles.openfreemap.org/styles/bright', { transformStyle: (_, next) => restyleMap(next) });
   let current = mode;
+  // 위성 층을 지도 스타일 안에 넣어 두고, 글자 층 바로 아래에 깐다.
+  map.setStyle('https://tiles.openfreemap.org/styles/bright', {
+    transformStyle: (_, next) => {
+      const style = restyleMap(next);
+      style.sources.satellite = {
+        type: 'raster', tileSize: 256, maxzoom: 19,
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
+      };
+      const firstLabel = style.layers.findIndex((layer) => layer.type === 'symbol');
+      style.layers.splice(firstLabel, 0, {
+        id: 'satellite', type: 'raster', source: 'satellite',
+        layout: { visibility: current === 'satellite' ? 'visible' : 'none' },
+      });
+      return style;
+    },
+  });
   function apply() {
     if (map.getLayer('satellite')) map.setLayoutProperty('satellite', 'visibility', current === 'satellite' ? 'visible' : 'none');
     box.querySelectorAll('[data-layer]').forEach((el) => el.setAttribute('aria-pressed', String(el.dataset.layer === current)));
   }
-  map.once('style.load', () => {
-    map.addSource('satellite', {
-      type: 'raster', tileSize: 256, maxzoom: 19,
-      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-      attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
-    });
-    const firstLabel = map.getStyle().layers.find((layer) => layer.type === 'symbol')?.id;
-    map.addLayer({ id: 'satellite', type: 'raster', source: 'satellite' }, firstLabel);
-    apply();
-  });
   box.querySelector('.mapseg').addEventListener('click', (e) => {
     const button = e.target.closest('[data-layer]');
     if (!button) return;

@@ -373,3 +373,4 @@ body[data-page='home'] .nav .wrap { width: 100%; padding: 0 24px; }
 @media (max-width: 719px) {
   .maphidden { bottom: 36px; }
 }
+.maphidden { bottom: 40px; }
