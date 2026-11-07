@@ -1,0 +1,6 @@
+# 공개 사이트에 필요한 파일만 올린다.
+/*
+!/.gitignore
+!/.nojekyll
+!/*.html
+!/assets/

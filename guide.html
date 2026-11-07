@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<title>주거 정보 | 개신방값</title>
+<meta name="description" content="개신동 실거래 자료로 본 계약 시기, 월세 구간과 계약 전 확인할 내용.">
+</head>
+<body data-page="guide">
+<div id="head"></div>
+<main id="main">
+<div class="pagehead"><div class="wrap">
+<h1>개신동 주거 정보</h1>
+<p class="sub">실제 계약 자료에서 뽑은 숫자와 계약 전에 확인할 내용을 모았습니다.</p>
+</div></div>
+<section class="block"><div class="wrap">
+<h2>방 종류별 시세</h2>
+<p class="sub">금액은 보증금/월세, 단위는 만원입니다. 중앙값은 계약을 금액순으로 줄 세웠을 때 가운데 값입니다.</p>
+<div class="grid3" id="tiles"></div>
+</div></section>
+<section class="block block--alt"><div class="wrap">
+<h2>이 자료를 읽는 방법</h2>
+<ul class="checks">
+<li><h3>매물이 아니라 계약 기록입니다</h3><p>이미 체결된 계약이라 지금 입주할 수 있는 방이 아닙니다. 시세 비교 용도로 쓰세요.</p></li>
+<li><h3>원룸과 투룸은 면적으로 나눴습니다</h3><p>자료에 방 개수가 없어 33㎡ 이하를 원룸, 66㎡ 이하를 투룸으로 봤습니다. 실제 구조는 다를 수 있습니다.</p></li>
+<li><h3>단독·다가구는 위치가 공개되지 않습니다</h3><p>개인정보 보호로 건물명과 지번이 빠져 있어 지도에 표시할 수 없습니다. 대부분의 계약이 이 유형입니다.</p></li>
+<li><h3>관리비는 금액에 없습니다</h3><p>자료에는 보증금과 월세만 있습니다. 관리비와 포함 항목은 거주 후기에서 확인하거나 집을 볼 때 물어보세요.</p></li>
+</ul>
+</div></section>
+<section class="block"><div class="wrap split">
+<div><h2>계약이 몰리는 시기</h2><p class="sub" id="peakGuide"></p></div>
+<div id="monthChart"></div>
+</div></section>
+<section class="block block--alt"><div class="wrap split">
+<div><h2>원룸 월세 구간</h2><p class="sub">원룸 월세 계약을 금액대별로 나눴습니다. 30만원대 초반에 가장 많이 모여 있습니다.</p></div>
+<ul class="hbars" id="bands"></ul>
+</div></section>
+<section class="block"><div class="wrap split">
+<div><h2>건물 연식별 원룸 시세</h2><p class="sub">준공 연도가 있는 계약만 계산했습니다. 금액은 월세 계약의 보증금/월세 중앙값이며, 단위는 만원입니다.</p></div>
+<table><thead><tr><th>건물 연식</th><th>계약</th><th>중앙값</th><th>면적 중앙값</th></tr></thead><tbody id="age"></tbody></table>
+</div></section>
+<section class="block block--alt"><div class="wrap">
+<h2>계약 전 확인 목록</h2>
+<p class="sub">일반적인 안내입니다. 실제 계약에서는 공인중개사나 주택도시보증공사, 지자체 상담 창구에서 최신 기준을 확인하세요.</p>
+<ul class="checks">
+<li><h3>등기사항증명서 확인</h3><p>실제 소유자와 근저당 금액을 보고, 계약 상대가 소유자 본인인지 신분증으로 맞춰 보세요.</p></li>
+<li><h3>전입신고와 확정일자</h3><p>입주 후 바로 전입신고를 하고 임대차계약서에 확정일자를 받아 보증금을 지키세요.</p></li>
+<li><h3>보증금 입금 계좌</h3><p>계약서에 적힌 소유자 명의 계좌인지 확인한 뒤 입금하세요.</p></li>
+<li><h3>관리비 포함 항목</h3><p>인터넷, 수도, 난방이 포함되는지 묻고 계약서 특약에 적어 두세요.</p></li>
+<li><h3>집 상태 점검</h3><p>곰팡이, 수압, 온수, 창문 틈, 옆방 소음을 낮과 저녁에 살펴보세요.</p></li>
+<li><h3>중도 퇴실 조건</h3><p>학기 단위로 살 계획이면 계약 기간과 다음 세입자를 구하는 비용을 미리 정하세요.</p></li>
+</ul>
+</div></section>
+</main>
+<div id="foot"></div>
+<script src="assets/data.js"></script>
+<script src="assets/coords.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

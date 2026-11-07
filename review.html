@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<title>거주 후기 | 개신방값</title>
+<meta name="description" content="개신동에 살아 본 사람들이 남기는 관리비, 난방비, 곰팡이, 소음 후기.">
+</head>
+<body data-page="review">
+<div id="head"></div>
+<main id="main">
+<div class="pagehead"><div class="wrap">
+<h1>개신동 거주 후기</h1>
+<p class="sub">국토부 자료에 없는 관리비, 난방비, 곰팡이, 소음을 살아 본 사람이 익명으로 공유합니다.</p>
+<p class="notice" id="mode"></p>
+<div class="btn-row headaction"><a class="btn btn--primary" href="#write">후기 남기기</a></div>
+</div></div>
+<div class="wrap" id="reviewsTop">
+<div class="filters"><div class="field field--seg"><span id="roomLabel">방 종류</span>
+<div class="seg seg--rooms" role="group" aria-labelledby="roomLabel" id="roomFilter"></div></div></div>
+<p class="result" id="reviewCount" aria-live="polite"></p>
+<dl class="facts facts--tight" id="tally"></dl>
+<div class="cards" id="reviews"></div>
+</div>
+<section class="block block--alt" id="write"><div class="wrap formwrap">
+<h2>거주 후기 남기기</h2>
+<p class="sub">이름과 로그인 없이 저장되며 등록 후에는 직접 고칠 수 없습니다. 아는 내용만 적어 주세요.</p>
+<form id="reviewForm" novalidate>
+<fieldset><legend>거래 정보</legend><div class="formgrid">
+<label class="field">방 종류<select name="room" id="roomSelect"></select></label>
+<label class="field">거래 유형<select name="deal"><option>월세</option><option>전세</option></select></label>
+<label class="field">거주 상태<select name="stay"><option>거주 중</option><option>퇴거 후</option></select></label>
+<label class="field">보증금 또는 전세금 (만원)<input name="deposit" inputmode="numeric" required></label>
+<label class="field" id="rentField">월세 (만원)<input name="rent" inputmode="numeric"></label>
+<label class="field">관리비 (만원, 선택)<input name="fee" inputmode="numeric"></label>
+</div>
+<div class="checks-row"><span>관리비 포함 항목</span><div id="includedFields"></div></div>
+</fieldset>
+<fieldset><legend>위치</legend><div class="formgrid">
+<label class="field">대략적인 위치<input name="place" maxlength="40" required placeholder="충북대 정문 근처"></label>
+<label class="field">건물 이름 (선택)<input name="building" maxlength="30"></label>
+<label class="field">거주 시기 (선택)<input name="period" maxlength="20" placeholder="2025년 3월~2026년 2월"></label>
+</div></fieldset>
+<fieldset><legend>생활 조건</legend><div class="formgrid" id="choiceFields"></div></fieldset>
+<fieldset><legend>하고 싶은 이야기</legend>
+<label class="field field--wide">후기 (선택, 300자 이내)<textarea name="comment" maxlength="300" rows="4"></textarea></label>
+</fieldset>
+<label class="check check--agree"><input type="checkbox" name="agree">사실만 적었고 호수, 이름, 연락처 같은 개인정보나 비방은 쓰지 않았습니다.</label>
+<input class="trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+<p class="formerror" id="formError" role="alert"></p>
+<p class="formdone" id="formDone" role="status"></p>
+<button class="btn btn--primary" type="submit">후기 등록하기</button>
+</form>
+</div></section>
+</main>
+<div id="foot"></div>
+<script src="assets/data.js"></script>
+<script src="assets/coords.js"></script>
+<script src="assets/reviews-config.js"></script>
+<script src="assets/site.js"></script>
+<script src="assets/reviews.js"></script>
+</body>
+</html>
